@@ -1,2 +1,24 @@
 # todo-vue-admin
-nodejs全栈之前端基于vue+iviewui构建界面，功能包括：登录，注册，忘记密码，自动登录，登出，todoList增删改查CURD
+
+## Project setup
+```
+npm install
+```
+
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
+
+### Compiles and minifies for production
+```
+npm run build
+```
+
+### Lints and fixes files
+```
+npm run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
