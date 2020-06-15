@@ -5,18 +5,20 @@
 -->
 
 <template>
-    <div class="login-container">
-        <div class="pageHeader">
-          <img src="../assets/logo.png" alt="logo">
-          <span>中电互联行业区块链管理平台</span>
-        </div>
+  <div class="login-container">
+      <div class="pageHeader">
+        <img src="../assets/logo.png" alt="logo">
+        <span>行业区块链管理平台</span>
+      </div>
 
-        <div class="login-box">
-          <div class="login-text">
-            <a href="javascript:;" class="active">登录</a>
-            <b>·</b>
-            <a href="javascript:;">注册</a>
-          </div>
+      <div class="login-box">
+        <div class="login-text" v-if="typeView != 2">
+          <a href="javascript:;" :class="typeView == 0 ? 'active' : ''" @click="handleTab(0)">登录</a>
+          <b>·</b>
+          <a href="javascript:;" :class="typeView == 1 ? 'active' : ''" @click="handleTab(1)">注册</a>
+        </div>
+        <!-- 登录模块 -->
+        <div class="right-content" v-show="typeView == 0">
           <div class="input-box">
             <input
               autocomplete="off"
@@ -25,7 +27,7 @@
               v-model="userName"
               maxlength="11"
               @keyup="handleInput($event)"
-              placeholder="请输入邮箱/手机号"
+              placeholder="请输入登录邮箱/手机号"
             />
             <input
               autocomplete="off"
@@ -34,7 +36,7 @@
               v-model="userPwd"
               maxlength="20"
               @keyup.enter="login"
-              placeholder="请输入密码"
+              placeholder="请输入登录密码"
             />
           </div>
           <Button
@@ -52,9 +54,96 @@
             </Checkbox>
             <span class="forget-pwd" @click.stop="forgetPwd">忘记密码?</span>
           </div>
-
         </div>
-    </div>
+
+        <!-- 注册模块 -->
+        <div class="right_content" v-show="typeView == 1">
+          <div class="input-box">
+            <input
+              autocomplete="off"
+              type="text"
+              class="input"
+              v-model="userName"
+              placeholder="请输入注册邮箱/手机号"
+            />
+            <input
+              autocomplete="off"
+              type="password"
+              class="input"
+              v-model="userPwd"
+              @keyup.enter="register"
+              placeholder="请输入密码"
+            />
+            <input
+              autocomplete="off"
+              type="password"
+              class="input"
+              v-model="userPwd2"
+              @keyup.enter="register"
+              placeholder="请再次确认密码"
+            />
+          </div>
+          <Button 
+            class="loginBtn" 
+            type="primary" 
+            :disabled="isRegAble" 
+            :loading="isLoading" 
+            @click.stop="register">
+            立即注册
+          </Button>
+         <!--  <div class="option">
+            <Checkbox class="remember" v-model="checked" @on-change="checkChange">
+              <span class="checked">我已阅读并接受</span>
+            </Checkbox>
+            <label class="protocol">《用户协议》</label>
+          </div> -->
+        </div>
+
+        <!-- 重置密码 -->
+        <div class="right-content" v-show="typeView == 2">
+          <div class="title">重置密码</div>
+          <div class="input-box">
+            <input
+              autocomplete="off"
+              type="text"
+              class="input"
+              v-model="userName"
+              placeholder="请输入登录邮箱/手机号"
+            />
+            <input
+              autocomplete="off"
+              type="password"
+              class="input"
+              v-model="userPwd"
+              @keyup.enter="reset"
+              placeholder="请输入密码"
+            />
+            <input
+              autocomplete="off"
+              type="password"
+              class="input"
+              v-model="userPwd2"
+              @keyup.enter="reset"
+              placeholder="请再次确认密码"
+            />
+          </div>
+          <Button 
+            class="loginBtn" 
+            type="primary" 
+            :disabled="isRegAble" 
+            :loading="isLoading" 
+            @click.stop="reset">
+            确认重置
+          </Button>
+          <div class="option">
+            <span class="goback" @click.stop="selectLogin">返回登录注册</span>
+          </div>
+        </div>
+
+      </div>
+
+
+  </div>
 </template>
 
 <script>
@@ -66,14 +155,13 @@ export default {
   },
   data() {
     return {
-      showDocState: false,
       userName: '',
       userPwdOld: '',
       userPwd: '',
       userPwd2: '',
-      checked: false, // 记住密码
+      typeView: 2, //显示不同的view
+      checked: false, // 记住登录
       isLoading: false,
-      isShowLoading: false
     };
   },
   computed: {
@@ -83,20 +171,20 @@ export default {
     },
     // 注册，重置密码按钮状态
     isRegAble() {
-      return !(
-        this.userPwdOld &&
-        this.userPwd &&
-        this.userPwd2 &&
-        this.treaty
-      );
+      return !(this.userName && this.userPwd && this.userPwd2);
     }
   },
   mounted() {
 
   },
   methods: {
+    // 登录注册tab切换
+    handleTab(type) {
+      this.typeView = type;
+      this.clearInput();
+    },
+    // 是否勾选记住密码
     checkChange(status) {
-      console.log(status);
       this.checked = status;
     },
     handleInput(e) {
@@ -113,8 +201,14 @@ export default {
         this.$refs.resetVerifyCode.style.borderBottomColor = '#e7e7e7';
       else this.$refs.loginVerifyCode.style.borderBottomColor = '#e7e7e7';
     },
-    // 忘记密码
+    // 返回登录界面
+    selectLogin() {
+      this.typeView = 0;
+      this.clearInput();
+    },
+    // 重置密码界面
     forgetPwd() {
+      this.typeView = 2;
       this.clearInput();
     },
     //立即登录
@@ -145,15 +239,9 @@ export default {
         // console.log('login=',res);
         this.isLoading = false;
         if (res.success) {
-          // this.$message({
-          //   type: 'success',
-          //   message: '登录成功',
-          //   offset: 100
-          // })
-
+          this.$Message.success('登录成功');
           this.saveInfo(res.data);
           //this.saveAutoLogin(this.isLogin);
-          // this.getUserInfo();
           this.$router.push('/home');
         }
 
@@ -162,9 +250,53 @@ export default {
         this.isLoading = false;
       });
     },
+    //重置密码
+    reset() {
+      if (this.isRegAble || this.isLoading) {
+        return false;
+      }
+
+      if (!this.$Valid.validUserName(this.userName)) {
+        this.errorTips("请输入正确的邮箱/手机号");
+        return false;
+      } else if (!this.$Valid.validPass(this.userPwd)) {
+        this.errorTips("输入的密码格式不正确");
+        return false;
+      } else if (!this.$Valid.validPass(this.userPwd2)){
+        this.errorTips("确认密码有误");
+        return false;
+      } else if (this.userPwd2 !== this.userPwd){
+        this.errorTips("两次密码不一致");
+        return false;
+      }
+      
+      this.isLoading = true;
+
+      // let data = {
+      //   password: Md5(this.userPwd2),
+      //   oncePassword: this.userCode,
+      //   user: this.userName
+      // }
+
+      // resetPwd(data)
+      // .then(res => {
+      //   this.isLoading = false;
+      //   if (res.success) {
+      //     this.typeView = 0;
+      //     this.$Message.success('密码修改成功');
+      //     this.clearInput();
+      //     this.selectLogin();
+      //   } else {
+      //     this.$Message.error('请求数据失败');
+      //   }
+      // })
+      // .catch(() => {
+      //   this.isLoading = false;
+      // })
+    },
+    // 清空输入框
     clearInput() {
       this.userName = '';
-      this.userCode = '';
       this.userPwd = '';
       this.userPwd2 = '';
     }
@@ -219,12 +351,16 @@ export default {
       .checked {
         padding-left: 5px;
       }
-      .forget-pwd {
+      .forget-pwd, .goback {
         float: right;
         font-size: 14px;
         font-weight: 400;
         color: #4981f2;
         line-height: 20px;
+        cursor: pointer;
+      }
+      .protocol {
+        color: #4981f2;
         cursor: pointer;
       }
     }
@@ -251,20 +387,28 @@ export default {
         padding: 10px;
       }
     }
+    .title {
+      font-weight: 600;
+      padding: 0 0 30px;
+      font-size: 24px;
+      letter-spacing: 1px;
+      color: rgba(73, 129, 242, 1);
+    }
 
     .input-box {
       .input {
         &:nth-child(1) {
           /*margin-top: 10px;*/
         }
-        &:nth-child(2) {
+        &:nth-child(2),
+        &:nth-child(3) {
           margin-top: 20px;
         }
       }
     }
 
     .loginBtn {
-      width: 350px;
+      width: 100%;
       height: 45px;
       margin-top: 40px;
       font-size: 15px;
@@ -343,6 +487,10 @@ export default {
     box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 1) inset;
     -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 1) inset;
     -webkit-text-fill-color: #2c2e33;
+  }
+
+  .ivu-checkbox-wrapper {
+    margin-right: 0;
   }
 
 }
