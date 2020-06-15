@@ -159,7 +159,7 @@ export default {
       userPwdOld: '',
       userPwd: '',
       userPwd2: '',
-      typeView: 2, //显示不同的view
+      typeView: 0, //显示不同的view
       checked: false, // 记住登录
       isLoading: false,
     };
@@ -227,28 +227,30 @@ export default {
         return false;
       }
 
-      this.isLoading = true;
+      this.isLoading = false;
 
-      let form = {
-        user: this.userName,
-        password: Md5(this.userPwd)
-      };
+      this.$router.push('/home');
 
-      login(form)
-      .then(res => {
-        // console.log('login=',res);
-        this.isLoading = false;
-        if (res.success) {
-          this.$Message.success('登录成功');
-          this.saveInfo(res.data);
-          //this.saveAutoLogin(this.isLogin);
-          this.$router.push('/home');
-        }
+      // let form = {
+      //   user: this.userName,
+      //   password: Md5(this.userPwd)
+      // };
 
-      })
-      .catch(() => {
-        this.isLoading = false;
-      });
+      // login(form)
+      // .then(res => {
+      //   // console.log('login=',res);
+      //   this.isLoading = false;
+      //   if (res.success) {
+      //     this.$Message.success('登录成功');
+      //     this.saveInfo(res.data);
+      //     //this.saveAutoLogin(this.isLogin);
+      //     this.$router.push('/home');
+      //   }
+
+      // })
+      // .catch(() => {
+      //   this.isLoading = false;
+      // });
     },
     //重置密码
     reset() {

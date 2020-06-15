@@ -1,77 +1,71 @@
 <!--
- 描述: 登录模板
+ 描述: 主页模板
  作者: Jack Chen
- 日期: 2020-04-18
+ 日期: 2020-06-15
 -->
 
 <template>
-  <div class="login-container">
-  	<div class="layer">
-  			<div class="some-space">
-        	<div class="form">
-						<h2>大数据可视化平台</h2>
-						<div class="item">
-							<i class="iconfont icon-user"></i>
-							<input
-	              autocomplete="off"
-	              type="text"
-	              class="input"
-	              v-model="userName"
-	              placeholder="请输入用户名"
-	            />
-            </div>
-            <div class="item">
-            	<i class="iconfont icon-password"></i>
-	            <input
-	              autocomplete="off"
-	              type="password"
-	              class="input"
-	              v-model="userPwd"
-	              maxlength="20"
-	              @keyup.enter="login"
-	              placeholder="请输入密码"
-	            />
-            </div>
-	          <button 
-	            class="loginBtn"
-	            :disabled="isLoginAble"
-	            @click.stop="login">
-	            立即登录
-	          </button>
-	          <div class="tip">
-							默认用户名：admin ，默认密码：123456
-	          </div>
-        	</div>
+  <div class="home-container">
+    	<div class="header">
+          <div class="section">
+            <img src="../assets/logo.png" alt="logo">
+            <ul>
+              <li>
+                <router-link to='/home' class="active">首页</router-link>
+              </li>
+              <li>
+                <a href="https://github.com/jackchen0120" target="_blank">github</a>
+              </li>
+              <li>
+                <a href="https://blog.csdn.net/qq_15041931" target="_blank">技术博客</a>
+              </li>
+            </ul>
+          </div>
+
+          <Dropdown trigger="hover" @on-click="changeMenu">
+              <a class="dropdown-link" href="javascript:void(0)">
+                <img class="avatar" src="../assets/avatar.jpg" alt="">
+                <Icon type="ios-arrow-down" size="14"></Icon>
+              </a>
+              <DropdownMenu slot="list">
+                  <DropdownItem name="a">修改密码</DropdownItem>
+                  <DropdownItem name="b">登出</DropdownItem>
+              </DropdownMenu>
+          </Dropdown>
+      </div>
+
+      <div class="content">
+        内容区域
+      </div>
+
+      <div class="footer">
+        <div class="copyright">
+            Copyright@2020-2025 微信公众号懒人码农 湘ICP备19016532号-1
         </div>
-    </div>
+      </div>
 
-	    <vue-particles 
-	      color="#6495ED"
-	      :particleOpacity="0.7"
-	      :particlesNumber="80"
-	      shapeType="circle"
-	      :particleSize="4"
-	      linesColor="#6495ED"
-	      :linesWidth="1"
-	      :lineLinked="true"
-	      :lineOpacity="0.6"
-	      :linesDistance="150"
-	      :moveSpeed="3"
-	      :hoverEffect="true"
-	      hoverMode="grab"
-	      :clickEffect="true"
-	      clickMode="push"
-	    >
-	    </vue-particles>
-
-    <bgAnimation />
-
-    <modal 
-      title="提示" 
-      :content="modalContent"
-      :visible.sync="visible" 
-      @confirm="confirm">
-    </modal>
+      <Modal
+        title="修改密码"
+        v-model="modal"
+        @on-ok="ok"
+        @on-cancel="cancel"
+        class-name="vertical-center-modal">
+        <Form :model="formItem" :label-width="90">
+          <FormItem label="旧密码">
+              <Input v-model="formItem.userPwdOld" placeholder="请输入旧密码"></Input>
+          </FormItem>
+          <FormItem label="新密码">
+              <Input v-model="formItem.userPwd" placeholder="请输入新密码"></Input>
+          </FormItem>
+          <FormItem label="确认新密码">
+              <Input v-model="formItem.userPwd2" placeholder="请再次确认新密码"></Input>
+          </FormItem>
+          <!-- <FormItem>
+            <Button type="primary">Submit</Button>
+            <Button style="margin-left: 8px">Cancel</Button>
+          </FormItem> -->
+        </Form>
+      </Modal>
 
   </div>
 </template>
@@ -79,225 +73,118 @@
 <script>
 
 export default {
-  name: 'Login',
+  name: 'Home',
   components: {},
   data() {
   	return {
-  		userName: 'admin',
-  		userPwd: '123456',
-      visible: false,
-      modalContent: '这是一段自定义模态框消息'
+  		modal: false,
+      formItem: {
+        userPwdOld: '',
+        userPwd: '',
+        userPwd2: ''
+      }
   	}
   },
   computed: {
-  	isLoginAble() {
-  		return !(this.userName && this.userPwd);
-  	}
+  	
   },
   created() {},
   mounted() {
 
   },
   methods: {
-  	login () {
-  		if (this.userName == 'admin' && this.userPwd == '123456') {
-         this.$router.push({
-          path: '/home'
-         })
+    // 点击头像下拉菜单选择
+    changeMenu(name) {
+      if (name == 'a') {
+        this.modal = true;
       } else {
-        this.$Toast({
-          content: '请输入正确的用户名和密码',
-          type: 'error',
-          // hasClose: true
-        })
+        this.$Message.info('真的要退出登录');
       }
-  	},
-    confirm () {
-      this.visible = false;
-      console.log('点击确定')
+    },
+    // 提交修改密码
+    ok() {
+      this.$Message.info('Clicked ok');
+    },
+    // 取消修改密码
+    cancel() {
+      this.$Message.info('Clicked cancel');
     }
   }
+  	
 }
 </script>
 
 <style lang="scss" scoped>
-.login-container {
-	.layer {
-	  position: absolute;
-	  height: 100%;
-	  width: 100%;
-	}
-	#particles-js {
-	  position: absolute;
-	  top: 0;
-	  left: 0;
-	  width: 100%;
-	  height: 100%;
-    z-index: 1000;
-	}
-	.some-space {
-	  color: white;
-	  font-weight: 100;
-	  letter-spacing: 2px;
-	  position: absolute;
-	  top: 50%;
-	  left: 50%;
-	  z-index: 1001;
-	  -webkit-transform: translate3d(-50%, -50%, 0);
-	  transform: translate3d(-50%, -50%, 0);
+.home-container {
+  .header {
+    width: 100%;
+    background: #17174c;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    box-sizing: border-box;
+    .section {
+      display: flex;
+      ul {
+        display: flex;
+        align-items: center;
+        margin-left: 60px;
+        li {
+          margin-right: 40px;
+          a {
+            color: #fff;
+            opacity: .5;
+            &:hover, &.active {
+              opacity: 1;
+            };
+          }
+        }
+      }
+    }
+    .dropdown-link {
+      color: #fff; 
+      .ivu-icon {
+        margin-left: 5px;
+      }
+    }
+    img {
+      outline: none;
+      &.avatar {
+        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        vertical-align: middle;
+        background: #eee;
+      }
+    }
 
-	  -ms-animation: cloud 2s 3s ease-in infinite alternate;
-	  -moz-animation: cloud 2s 3s ease-in infinite alternate;
-	  -webkit-animation: cloud 2s 3s ease-in infinite alternate;
-	  -o-animation: cloud 2s 3s ease-in infinite alternate;
-	  -webkit-animation: cloud 2s 3s ease-in infinite alternate;
-	  animation: cloud 2s 3s ease-in infinite alternate;
+  }
 
-	  .form {
-	  	width: 460px;
-	  	height: auto;
-	  	background: rgba(36, 36, 85, .5);
-	  	margin: 0 auto;
-	  	padding: 35px 30px 25px;
-	  	box-shadow: 0 0 25px rgba(255, 255, 255, .5);
-	  	border-radius: 10px;
-	    .item {
-	    	display: flex;
-	    	align-items: center;
-				margin-bottom: 25px;
-        border-bottom: 1px solid #d3d7f7;
-				i {
-					color: #d3d7f7;
-					margin-right: 10px;
-				}
-	    }
-	  	h2 {
-	  		text-align: center;
-	  		font-weight: normal;
-	  		font-size: 26px;
-	  		color: #d3d7f7;
-	  		padding-bottom: 35px;
-	  	}
-	  	.input {
-        font-size: 16px;
-        line-height: 30px;
-        width: 100%;
-        color: #d3d7f7;
-        outline: none;
-        border: none;
-        background-color: rgba(0, 0, 0, 0);
-        padding: 10px 0;
-	  	}
-	  	.loginBtn {
-	  		width: 100%;
-	  		padding: 12px 0;
-	  		border: 1px solid #d3d7f7;
-        font-size: 16px;
-    		color: #d3d7f7;
-    		cursor: pointer;
-    		background: transparent;
-    		border-radius: 4px;
-        margin-top: 10px;
-    		&:hover {
-    			color: #fff;
-    			background: #0090ff;
-    			border-color: #0090ff;
-    		}
-	  	}
-	  	.tip {
-        font-size: 12px;
-        padding-top: 20px;
-	  	}
-	  }
+  .content {
+    padding: 30px 40px;
+  }
 
+  .footer {
+    .copyright {
+      color: #fff;
+      font-size: 16px;
+      background: #14143f;
+      text-align: center;
+      padding: 30px 40px;
+    }
+  }
 
-	}
+}	
+</style>
+<style lang="scss">
+.vertical-center-modal{
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  .ivu-modal{
+      top: 0;
+  }
 }
-
-input::-webkit-input-placeholder {
-    color: #d3d7f7;
-}
-input::-moz-placeholder {   /* Mozilla Firefox 19+ */
-    color: #d3d7f7;
-}
-input:-moz-placeholder {    /* Mozilla Firefox 4 to 18 */
-    color: #d3d7f7;
-}
-input:-ms-input-placeholder {  /* Internet Explorer 10-11 */ 
-    color: #d3d7f7;
-}
-
-
-@-ms-keyframes cloud{
-    0%{
-        -ms-transform: translate(-50%, -50%);
-    }
-    40%{
-        opacity: 1;
-    }
-    60%{
-        opacity: 1;
-    }
-    100%{
-        -ms-transform: translate(-50%, -40%);
-    }
-}
-@-moz-keyframes cloud{
-    0%{
-        -moz-transform: translate(-50%, -50%);
-    }
-    40%{
-        opacity: 1;
-    }
-    60%{
-        opacity: 1;
-    }
-    100%{
-        -moz-transform: translate(-50%, -40%);
-    }
-}
-@-o-keyframes cloud{
-    0%{
-        -o-transform: translate(-50%, -50%);
-    }
-    40%{
-        opacity: 1;
-    }
-    60%{
-        opacity: 1;
-    }
-    100%{
-        -o-transform: translate(-50%, -40%);
-    }
-}
-@-webkit-keyframes cloud{
-    0%{
-        -webkit-transform: translate(-50%, -50%);
-    }
-    40%{
-        opacity: 1;
-    }
-    60%{
-        opacity: 1;
-    }
-    100%{
-        -webkit-transform: translate(-50%, -40%);
-    }
-}
-@keyframes cloud{
-    0%{
-        transform: translate(-50%, -50%);
-    }
-    40%{
-        opacity: 1;
-    }
-    60%{
-        opacity: 1;
-    }
-    100%{
-        transform: translate(-50%, -40%);
-    }
-}
-	
 </style>
