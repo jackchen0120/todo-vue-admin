@@ -8,7 +8,7 @@
   <div class="login-container">
       <div class="pageHeader">
         <img src="../assets/logo.png" alt="logo">
-        <span>行业区块链管理平台</span>
+        <span>TODO区块链管理平台</span>
       </div>
 
       <div class="login-box">
@@ -328,7 +328,7 @@ export default {
     span {
       font-size: 18px;
       display: inline-block;
-      vertical-align: middle;
+      vertical-align: -4px;
       color: rgba(255, 255, 255, 1);
     }
   }
