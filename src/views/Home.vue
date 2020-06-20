@@ -6,141 +6,86 @@
 
 <template>
   <div class="home-container">
-    	<div class="header">
-          <div class="section">
-            <img src="../assets/logo.png" alt="logo">
-            <ul>
-              <li>
-                <router-link to='/home' class="active">首页</router-link>
-              </li>
-              <li>
-                <a href="https://github.com/jackchen0120" target="_blank">github</a>
-              </li>
-              <li>
-                <a href="https://blog.csdn.net/qq_15041931" target="_blank">技术博客</a>
-              </li>
-            </ul>
-          </div>
+  	<Header />
 
-          <Dropdown trigger="hover" @on-click="changeMenu">
-              <a class="dropdown-link" href="javascript:void(0)">
-                <img class="avatar" src="../assets/avatar.jpg" alt="">
-                <Icon type="ios-arrow-down" size="14"></Icon>
-              </a>
-              <DropdownMenu slot="list">
-                  <DropdownItem name="a">修改密码</DropdownItem>
-                  <DropdownItem name="b">登出</DropdownItem>
-              </DropdownMenu>
-          </Dropdown>
+    <div class="content clearfix">
+      <div class="list">
+        <h2>任务列表</h2>
+        <Button type="primary" icon="md-add" size="large" @click="addTask">添加任务</Button>
       </div>
 
-      <div class="content clearfix">
-        <div class="list">
-          <h2>任务列表</h2>
-          <Button type="primary" icon="md-add" size="large" @click="addTask">添加任务</Button>
-        </div>
+      <Table :loading="loading" border :columns="columns" :data="tableData">
+        <template slot-scope="{ row, index }" slot="action">
+          <Button style="margin-right: 10px" @click="edit(index)">编辑</Button>
+          <Button type="primary" ghost style="margin-right: 10px" @click="complete(index)">完成</Button>
+          <Button type="error" ghost @click="remove(index)">删除</Button>
+        </template>
+      </Table>
 
-        <Table :loading="loading" border :columns="columns" :data="tableData">
-          <template slot-scope="{ row, index }" slot="action">
-            <Button style="margin-right: 10px" @click="edit(index)">编辑</Button>
-            <Button type="primary" ghost style="margin-right: 10px" @click="complete(index)">完成</Button>
-            <Button type="error" ghost @click="remove(index)">删除</Button>
-          </template>
-        </Table>
+      <Page
+        class-name="pagination"
+        show-total
+        :total="total"
+        :page-size="pageSize"
+        :current="pageNum"
+        v-if="!loading && total > 0"
+      />
+    </div>
 
-        <Page
-          class-name="pagination"
-          show-total
-          :total="total"
-          :page-size="pageSize"
-          :current="pageNum"
-          v-if="!loading && total > 0"
-        />
+    <Footer />
+
+    <Drawer
+      :title="title"
+      v-model="isShow"
+      width="600"
+      :styles="styles"
+    >
+      <Form :model="formData" ref="formValidate" :rules="ruleValidate">
+          <Row :gutter="32">
+              <Col span="24">
+                  <FormItem label="任务名称" prop="title" label-position="top">
+                    <Input v-model="formData.title" placeholder="请输入任务名称" />
+                  </FormItem>
+              </Col>
+          </Row>
+          <Row :gutter="32">
+              <Col span="24">
+                  <FormItem label="截止日期" prop="date" label-position="top">
+                    <DatePicker :editable="false" v-model="formData.date" type="date" placeholder="请选择截止日期" style="display: block"></DatePicker>
+                  </FormItem>
+              </Col>
+          </Row>
+          <FormItem label="任务内容" prop="content" label-position="top">
+            <Input type="textarea" v-model="formData.content" :rows="8" placeholder="请输入任务内容" />
+          </FormItem>
+      </Form>
+      <div class="demo-drawer-footer">
+        <Button type="primary" style="margin-right: 15px" @click="handleSubmit('formValidate')">{{ textBtn }}</Button>
+         <Button @click="handleReset('formValidate')" style="margin-right: 15px">重置</Button>
+        <Button type="error" ghost @click="isShow = false">取消</Button>
       </div>
-
-      <div class="footer">
-        <div class="copyright">
-            Copyright@2020-2025 微信公众号<懒人码农> 湘ICP备19016532号-1
-        </div>
-      </div>
-
-      <Modal
-        title="修改密码"
-        v-model="modal"
-        @on-ok="ok"
-        @on-cancel="cancel"
-        class-name="vertical-center-modal">
-        <Form :model="formItem" :label-width="90">
-          <FormItem label="旧密码">
-              <Input v-model="formItem.userPwdOld" placeholder="请输入旧密码"></Input>
-          </FormItem>
-          <FormItem label="新密码">
-              <Input v-model="formItem.userPwd" placeholder="请输入新密码"></Input>
-          </FormItem>
-          <FormItem label="确认新密码">
-              <Input v-model="formItem.userPwd2" placeholder="请再次确认新密码"></Input>
-          </FormItem>
-          <!-- <FormItem>
-            <Button type="primary">Submit</Button>
-            <Button style="margin-left: 8px">Cancel</Button>
-          </FormItem> -->
-        </Form>
-      </Modal>
-
-
-      <Drawer
-        :title="title"
-        v-model="isShow"
-        width="600"
-        :styles="styles"
-      >
-        <Form :model="formData" ref="formValidate" :rules="ruleValidate">
-            <Row :gutter="32">
-                <Col span="24">
-                    <FormItem label="任务名称" prop="title" label-position="top">
-                      <Input v-model="formData.title" placeholder="请输入任务名称" />
-                    </FormItem>
-                </Col>
-            </Row>
-            <Row :gutter="32">
-                <Col span="24">
-                    <FormItem label="截止日期" prop="date" label-position="top">
-                      <DatePicker :editable="false" v-model="formData.date" type="date" placeholder="请选择截止日期" style="display: block"></DatePicker>
-                    </FormItem>
-                </Col>
-            </Row>
-            <FormItem label="任务内容" prop="content" label-position="top">
-              <Input type="textarea" v-model="formData.content" :rows="8" placeholder="请输入任务内容" />
-            </FormItem>
-        </Form>
-        <div class="demo-drawer-footer">
-          <Button type="primary" style="margin-right: 15px" @click="handleSubmit('formValidate')">{{ textBtn }}</Button>
-           <Button @click="handleReset('formValidate')" style="margin-right: 15px">重置</Button>
-          <Button type="error" ghost @click="isShow = false">取消</Button>
-        </div>
-      </Drawer>    
+    </Drawer>    
 
 
   </div>
 </template>
 
 <script>
+import Header from "@/components/Header";  
+import Footer from "@/components/Footer";  
 
 export default {
   name: 'Home',
-  components: {},
+  components: {
+    Header,
+    Footer
+  },
   data() {
   	return {
       loading: true,
       total: 2,
       pageNum: 1,
       pageSize: 10,
-  		modal: false,
-      formItem: {
-        userPwdOld: '',
-        userPwd: '',
-        userPwd2: ''
-      },
       textBtn: '提交',
       title: '添加任务',
       isShow: false,
@@ -166,7 +111,7 @@ export default {
           title: '任务名称',
           key: 'title',
           render: (h, params) => {
-            console.log(params);
+            // console.log(params);
             const fav = this.tableData[params.index].fav;
             const style = fav === 0 ? {
               cursor: 'pointer',
@@ -300,22 +245,6 @@ export default {
     this.loading = false;
   },
   methods: {
-    // 点击头像下拉菜单选择
-    changeMenu(name) {
-      if (name == 'a') {
-        this.modal = true;
-      } else {
-        this.$Message.info('真的要退出登录');
-      }
-    },
-    // 提交修改密码
-    ok() {
-      this.$Message.info('Clicked ok');
-    },
-    // 取消修改密码
-    cancel() {
-      this.$Message.info('Clicked cancel');
-    },
     // 添加任务
     addTask() {
       this.isShow = true;
@@ -364,51 +293,8 @@ export default {
 
 <style lang="scss" scoped>
 .home-container {
-  .header {
-    width: 100%;
-    background: #17174c;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 40px;
-    box-sizing: border-box;
-    .section {
-      display: flex;
-      ul {
-        display: flex;
-        align-items: center;
-        margin-left: 60px;
-        li {
-          margin-right: 40px;
-          a {
-            color: #fff;
-            opacity: .5;
-            &:hover, &.active {
-              opacity: 1;
-            };
-          }
-        }
-      }
-    }
-    .dropdown-link {
-      color: #fff; 
-      .ivu-icon {
-        margin-left: 5px;
-      }
-    }
-    img {
-      outline: none;
-      &.avatar {
-        border-radius: 50%;
-        width: 42px;
-        height: 42px;
-        vertical-align: middle;
-        background: #eee;
-      }
-    }
-
-  }
-
+  width: 100%;
+  height: 100%;
   .content {
     padding: 30px 40px;
     .list {
@@ -422,33 +308,9 @@ export default {
     }
   }
 
-  .footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    .copyright {
-      color: #fff;
-      font-size: 14px;
-      background: #14143f;
-      text-align: center;
-      padding: 20px 40px;
-    }
-  }
-
 }	
 </style>
 <style lang="scss">
-.vertical-center-modal{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .ivu-modal{
-      top: 0;
-  }
-}
-
 .pagination {
   float: right;
   margin: 20px 0;

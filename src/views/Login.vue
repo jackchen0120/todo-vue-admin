@@ -20,20 +20,19 @@
         <!-- 登录模块 -->
         <div class="right-content" v-show="typeView == 0">
           <div class="input-box">
+
             <input
               autocomplete="off"
               type="text"
               class="input"
-              v-model="userName"
-              maxlength="11"
-              @keyup="handleInput($event)"
+              v-model="formLogin.userName"
               placeholder="请输入登录邮箱/手机号"
             />
             <input
               autocomplete="off"
               type="password"
               class="input"
-              v-model="userPwd"
+              v-model="formLogin.userPwd"
               maxlength="20"
               @keyup.enter="login"
               placeholder="请输入登录密码"
@@ -63,14 +62,15 @@
               autocomplete="off"
               type="text"
               class="input"
-              v-model="userName"
+              v-model="formRegister.userName"
               placeholder="请输入注册邮箱/手机号"
             />
             <input
               autocomplete="off"
               type="password"
               class="input"
-              v-model="userPwd"
+              v-model="formRegister.userPwd"
+              maxlength="20"
               @keyup.enter="register"
               placeholder="请输入密码"
             />
@@ -78,7 +78,8 @@
               autocomplete="off"
               type="password"
               class="input"
-              v-model="userPwd2"
+              v-model="formRegister.userPwd2"
+              maxlength="20"
               @keyup.enter="register"
               placeholder="请再次确认密码"
             />
@@ -99,22 +100,23 @@
           </div> -->
         </div>
 
-        <!-- 重置密码 -->
-        <div class="right-content" v-show="typeView == 2">
+        <!-- 忘记密码 -->
+        <!-- <div class="right-content" v-show="typeView == 2">
           <div class="title">重置密码</div>
           <div class="input-box">
             <input
               autocomplete="off"
               type="text"
               class="input"
-              v-model="userName"
+              v-model="formReset.userName"
               placeholder="请输入登录邮箱/手机号"
             />
             <input
               autocomplete="off"
               type="password"
               class="input"
-              v-model="userPwd"
+              v-model="formReset.userPwd"
+              maxlength="20"
               @keyup.enter="reset"
               placeholder="请输入密码"
             />
@@ -122,7 +124,8 @@
               autocomplete="off"
               type="password"
               class="input"
-              v-model="userPwd2"
+              v-model="formReset.userPwd2"
+              maxlength="20"
               @keyup.enter="reset"
               placeholder="请再次确认密码"
             />
@@ -130,7 +133,7 @@
           <Button 
             class="loginBtn" 
             type="primary" 
-            :disabled="isRegAble" 
+            :disabled="isResetAble" 
             :loading="isLoading" 
             @click.stop="reset">
             确认重置
@@ -138,7 +141,7 @@
           <div class="option">
             <span class="goback" @click.stop="selectLogin">返回登录注册</span>
           </div>
-        </div>
+        </div> -->
 
       </div>
 
@@ -147,6 +150,10 @@
 </template>
 
 <script>
+import { 
+  login,
+  register
+} from '@/utils/api';
 
 export default {
   name: 'login',
@@ -155,10 +162,20 @@ export default {
   },
   data() {
     return {
-      userName: '',
-      userPwdOld: '',
-      userPwd: '',
-      userPwd2: '',
+      formLogin: {
+        userName: '',
+        userPwd: '',
+      },
+      formRegister: {
+        userName: '',
+        userPwd2: '',
+        userPwd: '',
+      },
+      // formReset: {
+      //   userName: '',
+      //   userPwd2: '',
+      //   userPwd: '',
+      // },
       typeView: 0, //显示不同的view
       checked: false, // 记住登录
       isLoading: false,
@@ -167,28 +184,25 @@ export default {
   computed: {
     // 登陆按钮状态
     isDisabled() {
-      return !(this.userName && this.userPwd);
+      return !(this.formLogin.userName && this.formLogin.userPwd);
     },
-    // 注册，重置密码按钮状态
+    // 注册按钮状态
     isRegAble() {
-      return !(this.userName && this.userPwd && this.userPwd2);
-    }
+      return !(this.formRegister.userName && this.formRegister.userPwd && this.formRegister.userPwd2);
+    },
+    // 重置密码按钮状态
+    // isResetAble() {
+    //   return !(this.formReset.userName && this.formReset.userPwd && this.formReset.userPwd2);
+    // }
   },
   mounted() {
-
+    this.getCookie();
   },
   methods: {
-    // 登录注册tab切换
+    // 登录/注册tab切换
     handleTab(type) {
       this.typeView = type;
       this.clearInput();
-    },
-    // 是否勾选记住密码
-    checkChange(status) {
-      this.checked = status;
-    },
-    handleInput(e) {
-      this.userName = e.target.value.replace(/[^\d]/g, '');
     },
     // 输入框焦点样式
     focusInput(index) {
@@ -206,102 +220,166 @@ export default {
       this.typeView = 0;
       this.clearInput();
     },
-    // 重置密码界面
+    // 忘记密码界面
     forgetPwd() {
-      this.typeView = 2;
-      this.clearInput();
+      this.$Message.info('忘记密码，请联系客服');
+      // this.typeView = 2;
+      // this.clearInput();
     },
-    //立即登录
+
+    // 立即登录
     login() {
       if (this.isDisabled || this.isLoading) {
         return false;
       }
 
-      if (!(this.$Valid.validUserName(this.userName))) {
+      if (!this.$Valid.validUserName(this.formLogin.userName)) {
         this.$Message.error('请输入正确的邮箱/手机号');
         return false;
       }
 
-      if (!this.$Valid.validPass(this.userPwd)) {
+      if (!this.$Valid.validPass(this.formLogin.userPwd)) {
         this.$Message.error('密码应为8到20位字母或数字！');
         return false;
       }
 
-      this.isLoading = false;
+      // 判断复选框是否被勾选，勾选则调用配置cookie方法
+      if (this.checked) {
+        // 传入账号名，密码，和保存天数3个参数
+        this.setCookie(this.formLogin.userName, this.formLogin.userPwd, 7);
+      } else {
+        // 清空Cookie
+        this.clearCookie();
+      }
 
-      this.$router.push('/home');
+      this.isLoading = true;
 
-      // let form = {
-      //   user: this.userName,
-      //   password: Md5(this.userPwd)
-      // };
+      let form = {
+        username: this.formLogin.userName,
+        password: this.formLogin.userPwd
+      };
 
-      // login(form)
-      // .then(res => {
-      //   // console.log('login=',res);
-      //   this.isLoading = false;
-      //   if (res.success) {
-      //     this.$Message.success('登录成功');
-      //     this.saveInfo(res.data);
-      //     //this.saveAutoLogin(this.isLogin);
-      //     this.$router.push('/home');
-      //   }
+      login(form)
+      .then(res => {
+        console.log('登录===', res);
+        this.isLoading = false;
+        if (res.code == 0) {
+          this.clearInput();
+          this.$Message.success('登录成功');
+          this.$store.dispatch('userInfo/saveInfo', res.data);
+          this.$router.push('/home');
+        } else {
+          this.$Message.error(res.msg);
+        }
 
-      // })
-      // .catch(() => {
-      //   this.isLoading = false;
-      // });
+      })
+      .catch(() => {
+        this.isLoading = false;
+      });
     },
-    //重置密码
-    reset() {
+
+    // 立即注册
+    register() {
       if (this.isRegAble || this.isLoading) {
         return false;
       }
 
-      if (!this.$Valid.validUserName(this.userName)) {
-        this.errorTips("请输入正确的邮箱/手机号");
+      if (!this.$Valid.validUserName(this.formRegister.userName)) {
+        this.$Message.error("请输入正确的邮箱/手机号");
         return false;
-      } else if (!this.$Valid.validPass(this.userPwd)) {
-        this.errorTips("输入的密码格式不正确");
+      } else if (!this.$Valid.validPass(this.formRegister.userPwd)) {
+        this.$Message.error("密码应为8到20位字母或数字！");
         return false;
-      } else if (!this.$Valid.validPass(this.userPwd2)){
-        this.errorTips("确认密码有误");
+      } else if (!this.$Valid.validPass(this.formRegister.userPwd2)){
+        this.$Message.error("确认密码有误");
         return false;
-      } else if (this.userPwd2 !== this.userPwd){
-        this.errorTips("两次密码不一致");
+      } else if (this.formRegister.userPwd2 !== this.formRegister.userPwd){
+        this.$Message.error("两次密码不一致");
         return false;
       }
-      
+
       this.isLoading = true;
 
-      // let data = {
-      //   password: Md5(this.userPwd2),
-      //   oncePassword: this.userCode,
-      //   user: this.userName
-      // }
+      let data = {
+        username: this.formRegister.userName,
+        password: this.formRegister.userPwd2
+      }
 
-      // resetPwd(data)
-      // .then(res => {
-      //   this.isLoading = false;
-      //   if (res.success) {
-      //     this.typeView = 0;
-      //     this.$Message.success('密码修改成功');
-      //     this.clearInput();
-      //     this.selectLogin();
-      //   } else {
-      //     this.$Message.error('请求数据失败');
-      //   }
-      // })
-      // .catch(() => {
-      //   this.isLoading = false;
-      // })
+      register(data)
+      .then(res => {
+        this.isLoading = false;
+        console.log('注册===', res);
+        if (res.code == 0) {
+          this.clearInput();
+          this.$Message.success('注册成功');
+          this.$store.dispatch('userInfo/saveInfo', res.data);
+          this.$router.push('/home');
+        } else {
+          this.$Message.error(res.msg);
+        }
+      })
+      .catch(() => {
+        this.isLoading = false;
+      })
+
     },
+
+    // 设置cookie
+    setCookie(user_name, user_pwd, exdays) {
+      // 获取时间
+      let exdate = new Date(); 
+      // 保存的天数
+      exdate.setTime(exdate.getTime() + 24 * 60 * 60 * 1000 * exdays); 
+      // 字符串拼接cookie
+      window.document.cookie = 'userName' + '=' + user_name + ';path=/;expires=' + exdate.toUTCString();
+      window.document.cookie = 'userPwd' + '=' + user_pwd + ';path=/;expires=' + exdate.toUTCString();
+    },
+
+    // 读取cookie
+    getCookie() {
+      if (document.cookie.length > 0) {
+        // 这里显示的格式需要切割一下自己可输出看下
+        let arr = document.cookie.split('; '); 
+        console.log(arr)
+        for (let i = 0; i < arr.length; i++) {
+          // 再次切割
+          let arr2 = arr[i].split('='); 
+          // 判断查找相对应的值
+          if (arr2[0] == 'userName') {
+            // 保存数据并赋值
+            this.formLogin.userName = arr2[1]; 
+          } else if (arr2[0] == 'userPwd') {
+            this.formLogin.userPwd = arr2[1];
+          }
+        }
+      }
+    },
+
+    //清除cookie
+    clearCookie() {
+      // 修改前2个值都为空，天数为负1天就好了
+      this.setCookie('', '', -1); 
+    },
+
+    // 是否勾选记住密码
+    checkChange(status) {
+      console.log(status);
+      this.checked = status;
+    },
+
     // 清空输入框
     clearInput() {
-      this.userName = '';
-      this.userPwd = '';
-      this.userPwd2 = '';
+      this.formLogin = {
+        userName: '',
+        userPwd: '',
+      }
+      this.formRegister = {
+        userName: '',
+        userPwd2: '',
+        userPwd: '',
+      }
     }
+
   }
 };
 </script>
