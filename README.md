@@ -78,7 +78,8 @@ npm run serve
 npm run build
 ```
 
+## 获取更多实战项目经验及源码
 
-欢迎关注个人公众号获取更多实战项目经验及源码：**懒人码农**
+欢迎关注个人公众号：**懒人码农**
 
 <img src="https://img-blog.csdnimg.cn/20200531011333650.png#pic_center?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE1MDQxOTMx,size_16,color_FFFFFF,t_70" width="200" alt="公众号二维码" />
