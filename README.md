@@ -10,10 +10,10 @@ NodeJS全栈开发之前端技术栈基于Vue+iViewUI构建的用户后台管理
 │      favicon.ico                   // 图标
 │      index.html                    // 入口html文件
 └─src
-    │  App.vue 						 // 根组件
+    │  App.vue                       // 根组件
     │  main.js                       // 程序入口文件
     │  
-    ├─assets						 // 存放公共图片文件夹
+    ├─assets                         // 存放公共图片文件夹
     │      
     ├─components
     │      Footer.vue                // 页面底部公用组件
