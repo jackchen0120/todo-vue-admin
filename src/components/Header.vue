@@ -27,6 +27,7 @@
 
       <Dropdown trigger="hover" @on-click="changeMenu">
         <a class="dropdown-link" href="javascript:void(0)">
+          <span class="username">{{ username }}</span>
           <img class="avatar" src="../assets/avatar.jpg" alt="">
           <Icon type="ios-arrow-down" size="14"></Icon>
         </a>
@@ -49,17 +50,17 @@
       title="修改密码"
       v-model="modal"
       @on-ok="ok"
-      @on-cancel="cancel"
+      :loading="modalLoading"
       class-name="vertical-center-modal">
-      <Form :model="formItem" :label-width="90">
-        <FormItem label="旧密码">
-            <Input v-model="formItem.userPwdOld" maxlength="20" placeholder="请输入旧密码"></Input>
+      <Form :model="formItem" :label-width="90" ref="formItem">
+        <FormItem label="旧密码" prop="oldPassword">
+            <Input v-model="formItem.oldPassword" type="password" maxlength="20" placeholder="请输入旧密码"></Input>
         </FormItem>
-        <FormItem label="新密码">
-            <Input v-model="formItem.userPwd" maxlength="20" placeholder="请输入新密码"></Input>
+        <FormItem label="新密码" prop="newPassword">
+            <Input v-model="formItem.newPassword" type="password" maxlength="20" placeholder="请输入新密码"></Input>
         </FormItem>
-        <FormItem label="确认新密码">
-            <Input v-model="formItem.userPwd2" maxlength="20" placeholder="请再次确认新密码"></Input>
+        <FormItem label="确认新密码" prop="confirmPassword">
+            <Input v-model="formItem.confirmPassword" type="password" maxlength="20" placeholder="请再次确认新密码"></Input>
         </FormItem>
       </Form>
     </Modal>
@@ -68,6 +69,7 @@
 </template>
 
 <script>
+import { resetPwd } from '@/utils/api';
 
 export default {
   name: 'Header',
@@ -75,10 +77,12 @@ export default {
   data() {
   	return {
   		modal: false,
+      modalLoading: true,
+      username: this.$store.state.userInfo.data.userData.username,
       formItem: {
-        userPwdOld: '',
-        userPwd: '',
-        userPwd2: ''
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
       },
   	}
   },
@@ -94,17 +98,49 @@ export default {
     changeMenu(name) {
       if (name == 'a') {
         this.modal = true;
+        this.$refs['formItem'].resetFields();
       } else if (name == 'b') {
         this.$store.dispatch('userInfo/logout')
       }
     },
     // 提交修改密码
     ok() {
-      this.$Message.info('Clicked ok');
-    },
-    // 取消修改密码
-    cancel() {
-      this.$Message.info('Clicked cancel');
+      setTimeout(() => {
+        this.modalLoading = false;
+        this.$nextTick(() => {
+          this.modalLoading = true;
+        });
+      }, 100);
+
+      if (!this.$Valid.validPass(this.formItem.oldPassword)) {
+        this.$Message.error("旧密码应为8到20位字母或数字！");
+        return false;
+      } else if (!this.$Valid.validPass(this.formItem.newPassword)) {
+        this.$Message.error("新密码应为8到20位字母或数字！");
+        return false;
+      } else if (!this.$Valid.validPass(this.formItem.confirmPassword)){
+        this.$Message.error("确认密码有误");
+        return false;
+      } else if (this.formItem.confirmPassword !== this.formItem.newPassword){
+        this.$Message.error("两次密码不一致");
+        return false;
+      }
+
+      let data = {
+        username: this.$store.state.userInfo.data.userData.username,
+        oldPassword: this.formItem.oldPassword,
+        newPassword: this.formItem.confirmPassword
+      }
+
+      resetPwd(data)
+      .then(res => {
+        if (res.code == 0) {
+          this.modal = false;
+          this.$Message.success('修改密码成功');
+        } else {
+          this.$Message.error(res.msg);
+        }
+      })
     }
 
   }
@@ -142,6 +178,9 @@ export default {
     }
     .dropdown-link {
       color: #fff; 
+      .username {
+        padding-right: 10px;
+      }
       .ivu-icon {
         margin-left: 5px;
       }

@@ -1,5 +1,4 @@
 import network from './network';
-// import qs from 'qs';
 
 // 登录
 export function login(data) {
@@ -28,33 +27,56 @@ export function resetPwd(data) {
   })
 }
 
+// 任务列表
+export function queryTaskList(params) {
+  return network({
+    url: `/queryTaskList`,
+    method: "get",
+    params
+  })
+}
 
-// export function deviceList(args, projectKey) {
-//   let data = qs.stringify({
-//     args, 
-//     projectKey
-//   })
+// 添加任务
+export function addTask(data) {
+  return network({
+    url: `/addTask`,
+    method: "post",
+    data
+  })
+}
 
-//   return network({
-//     url: `/xbaasstudio/aerial-op-car-cc/car/queryListWithPagination`,
-//     method: "post",
-//     headers: {
-//         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-//     },
-//     data: data
-//   });
-// }
+// 编辑任务
+export function editTask(data) {
+  return network({
+    url: `/editTask`,
+    method: "put",
+    data
+  })
+}
 
+// 操作任务状态
+export function updateTaskStatus(data) {
+  return network({
+    url: `/updateTaskStatus`,
+    method: "put",
+    data
+  })
+}
 
-// export function queryById(args, projectKey) {
-//   let data = qs.stringify({
-//     args, 
-//     projectKey
-//   })
+// 点亮红星标记
+export function updateMark(data) {
+  return network({
+    url: `/updateMark`,
+    method: "put",
+    data
+  })
+}
 
-//   return network({
-//     url: `/xbaasstudio/aerial-op-car-cc/queryById`,
-//     method: "post",
-//     data: data
-//   });
-// }
+// 删除任务
+export function deleteTask(data) {
+  return network({
+    url: `/deleteTask`,
+    method: "delete",
+    data
+  })
+}

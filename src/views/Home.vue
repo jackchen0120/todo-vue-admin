@@ -16,9 +16,9 @@
 
       <Table :loading="loading" border :columns="columns" :data="tableData">
         <template slot-scope="{ row, index }" slot="action">
-          <Button style="margin-right: 10px" @click="edit(index)">编辑</Button>
-          <Button type="primary" ghost style="margin-right: 10px" @click="complete(index)">完成</Button>
-          <Button type="error" ghost @click="remove(index)">删除</Button>
+          <Button style="margin-right: 10px" @click="edit(row, index)"  v-if="row.status != 2">编辑</Button>
+          <Button type="primary" ghost style="margin-right: 10px" @click="complete(row)" v-if="row.status != 2">{{ row.status == 0 ? '完成' : row.status == 1 ? '待办' : null}}</Button>
+          <Button type="error" ghost @click="remove(row.id)" v-if="row.status != 2">删除</Button>
         </template>
       </Table>
 
@@ -26,8 +26,9 @@
         class-name="pagination"
         show-total
         :total="total"
+        @on-change="handleCurrentChange"
         :page-size="pageSize"
-        :current="pageNum"
+        :current="pageNo"
         v-if="!loading && total > 0"
       />
     </div>
@@ -39,24 +40,25 @@
       v-model="isShow"
       width="600"
       :styles="styles"
+      :mask-closable="false"
     >
-      <Form :model="formData" ref="formValidate" :rules="ruleValidate">
+      <Form :model="formValidate" ref="formValidate" :rules="ruleValidate">
           <Row :gutter="32">
               <Col span="24">
                   <FormItem label="任务名称" prop="title" label-position="top">
-                    <Input v-model="formData.title" placeholder="请输入任务名称" />
+                    <Input v-model="formValidate.title" placeholder="请输入任务名称" />
                   </FormItem>
               </Col>
           </Row>
           <Row :gutter="32">
               <Col span="24">
                   <FormItem label="截止日期" prop="date" label-position="top">
-                    <DatePicker :editable="false" v-model="formData.date" type="date" placeholder="请选择截止日期" style="display: block"></DatePicker>
+                    <DatePicker :editable="false" v-model="formValidate.date" type="date" placeholder="请选择截止日期" style="display: block"></DatePicker>
                   </FormItem>
               </Col>
           </Row>
           <FormItem label="任务内容" prop="content" label-position="top">
-            <Input type="textarea" v-model="formData.content" :rows="8" placeholder="请输入任务内容" />
+            <Input type="textarea" v-model="formValidate.content" :rows="8" placeholder="请输入任务内容" />
           </FormItem>
       </Form>
       <div class="demo-drawer-footer">
@@ -71,8 +73,16 @@
 </template>
 
 <script>
-import Header from "@/components/Header";  
-import Footer from "@/components/Footer";  
+import Header from '@/components/Header';  
+import Footer from '@/components/Footer'; 
+import { 
+  queryTaskList,
+  addTask,
+  editTask,
+  updateTaskStatus,
+  updateMark,
+  deleteTask
+} from '@/utils/api';
 
 export default {
   name: 'Home',
@@ -83,10 +93,12 @@ export default {
   data() {
   	return {
       loading: true,
-      total: 2,
-      pageNum: 1,
+      total: 0,
+      pageNo: 1,
       pageSize: 10,
+      status: null,
       textBtn: '提交',
+      type: 1, // 1:添加 2:编辑
       title: '添加任务',
       isShow: false,
       styles: {
@@ -95,24 +107,30 @@ export default {
         paddingBottom: '53px',
         position: 'static'
       },
-      formData: {
+      formValidate: {
         title: '',
         date: '',
         content: ''
       },
       columns: [
         {
-          title: 'ID',
-          key: 'id',
+          title: '序号',
+          type: 'index',
           width: 80,
           align: 'center'
         },
+        // {
+        //   title: 'ID',
+        //   key: 'id',
+        //   width: 80,
+        //   align: 'center'
+        // },
         {
           title: '任务名称',
           key: 'title',
           render: (h, params) => {
             // console.log(params);
-            const fav = this.tableData[params.index].fav;
+            const fav = this.tableData[params.index].is_major;
             const style = fav === 0 ? {
               cursor: 'pointer',
               fontSize: '18px'
@@ -130,7 +148,7 @@ export default {
                 },
                 nativeOn: {
                   click: () => {
-                    this.toggleFav(params.index);
+                    this.toggleFav(params.row, params.index);
                   }
                 }
               }),
@@ -145,7 +163,12 @@ export default {
         },
         {
           title: '截止日期',
-          key: 'date'
+          key: 'gmt_expire',
+          render: (h, params) => {
+            const row = params.row;
+            const text = this.$Valid.formatDate(row.gmt_expire);
+            return h('div', text);
+          }
         },
         {
           title: '任务状态',
@@ -171,14 +194,11 @@ export default {
             }
           ],
           filterMultiple: false,
-          filterMethod (value, row) {
-              if (value === 0) {
-                return row.status == value;
-              } else if (value === 1) {
-                return row.status == value;
-              } else if (value === 2) {
-                return row.status == value;
-              }
+          filterRemote (value, row) {
+            let _this = this;
+            _this.status = value[0];
+            _this.pageNo = 1;
+            _this.getTaskList();
           }
         },
         {
@@ -188,41 +208,7 @@ export default {
           align: 'center'
         }
       ],
-      tableData: [
-        {
-          id: 1,
-          title: 'John Brown',
-          content: 'New York No. 1 Lake Park',
-          status: 0,
-          fav: 0,
-          date: '2016-10-03'
-        },
-        {
-          id: 2,
-          title: 'Jim Green',
-          content: 'London No. 1 Lake Park',
-          status: 0,
-          fav: 0,
-          date: '2016-10-01'
-        },
-        {
-          id: 3,
-          title: 'Joe Black',
-          content: 'Sydney No. 1 Lake Park',
-          status: 1,
-          fav: 0,
-          date: '2016-10-02'
-        },
-        {
-          id: 4,
-          title: 'Jon Snow',
-          content: 'Ottawa No. 2 Lake Park',
-          status: 2,
-          fav: 0,
-          date: '2016-10-04'
-        }
-      ],
-
+      tableData: [],
       ruleValidate: {
         title: [
           { required: true, message: '任务名称不能为空', trigger: 'blur' }
@@ -242,39 +228,160 @@ export default {
   },
   created() {},
   mounted() {
-    this.loading = false;
+    this.getTaskList();
   },
   methods: {
+    // 页码改变的回调，返回改变后的页码
+    handleCurrentChange(val) {
+      console.log(val)
+      this.pageNo = val;
+      this.getTaskList();
+    },
+    // 获取任务列表数据
+    getTaskList() {
+      this.loading = true;
+
+      let params = {
+        pageNo: this.pageNo,
+        pageSize: this.pageSize,
+        status: this.status
+      }
+
+      queryTaskList(params)
+      .then(res => {
+        console.log('任务列表===', res);
+        this.loading = false;
+        if (res.code == 0 && res.data) {
+          this.tableData = res.data.rows;
+          this.total = res.data.total;
+        } else {
+          this.tableData = [];
+          this.total = 0;
+        }
+      })
+      .catch(() => {
+        this.loading = false;
+      })
+    },
     // 添加任务
     addTask() {
       this.isShow = true;
       this.textBtn = '提交';
       this.title = '添加任务';
+      this.type = 1;
       this.$refs['formValidate'].resetFields();
     },
     // 编辑任务
-    edit(index) {
+    edit(row, index) {
       this.isShow = true;
       this.textBtn = '保存';
       this.title = '编辑任务';
+      this.type = 2;
+
+      this.formValidate = {
+        id: row.id,
+        title: row.title,
+        date: this.$Valid.formatDate(row.gmt_expire),
+        content: row.content
+      }
+
     },
     // 完成/待办任务
-    complete(index) {
-      this.$Message.success('设置任务已完成');
+    complete(row) {
+      let status = row.status == 0 ? 1 : row.status == 1 ? 0 : null;
+
+      let data = {
+        id: row.id,
+        status: status
+      }
+
+      updateTaskStatus(data)
+      .then(res => {
+        console.log('操作状态===', res);
+        if (res.code == 0) {
+          this.pageNo = 1;
+          this.getTaskList();
+          this.$Message.success('更新任务状态成功');
+        } else {
+          this.$Message.error(res.msg);
+        }
+      })
     },
     // 删除任务
-    remove(index) {
-      this.$Message.error('任务删除成功');
+    remove(id) {
+      let data = {
+        id: id,
+        status: 2
+      }
+
+      deleteTask(data)
+      .then(res => {
+        console.log('删除任务===', res);
+        if (res.code == 0) {
+          this.pageNo = 1;
+          this.getTaskList();
+          this.$Message.success('任务删除成功');
+        } else {
+          this.$Message.error(res.msg);
+        }
+      })
       // this.data.splice(index, 1);
     },
-    // 提交或保存
+    // 提交添加或编辑
     handleSubmit(name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
-          this.$Message.success('Success!');
-          this.isShow = false;
+
+          if (this.type == 1) {
+
+            let data = {
+              title: this.formValidate.title,
+              gmt_expire: new Date(this.formValidate.date.toString()).getTime(),
+              content: this.formValidate.content
+            }
+
+            addTask(data)
+            .then(res => {
+              console.log('添加任务===', res)
+              this.isShow = false;
+              if (res.code == 0) {
+                this.pageNo = 1;
+                this.getTaskList();
+                this.$Message.success(`${this.title}成功`);
+              } else {
+                this.$Message.error(res.msg);
+              }
+            })
+            .catch(() => {
+              this.isShow = false;
+            })
+          } else if (this.type == 2) {
+            let data = {
+              id: this.formValidate.id,
+              title: this.formValidate.title,
+              gmt_expire: new Date(this.formValidate.date.toString()).getTime(),
+              content: this.formValidate.content
+            }
+
+            editTask(data)
+            .then(res => {
+              console.log('编辑任务===', res)
+              this.isShow = false;
+              if (res.code == 0) {
+                this.pageNo = 1;
+                this.getTaskList();
+                this.$Message.success(`${this.title}成功`);
+              } else {
+                this.$Message.error(res.msg);
+              }
+            })
+            .catch(() => {
+              this.isShow = false;
+            })
+          }
+
         } else {
-          this.$Message.error('Fail!');
+          return false;
         }
       })
     },
@@ -283,8 +390,30 @@ export default {
       this.$refs[name].resetFields();
     },
     // 重要或不重要
-    toggleFav (index) {
-      this.tableData[index].fav = this.tableData[index].fav === 0 ? 1 : 0;
+    toggleFav (row, index) {
+      if (row.status == 2) {
+        this.$Message.error('数据已删除');
+      } else {
+        // is_major: 0:不重要 1:重要
+        this.tableData[index].is_major = this.tableData[index].is_major === 0 ? 1 : 0;
+
+        let data = {
+          id: row.id,
+          is_major: this.tableData[index].is_major
+        }
+
+        updateMark(data)
+        .then(res => {
+          console.log('操作标记===', res);
+          if (res.code == 0) {
+            this.pageNo = 1;
+            this.getTaskList();
+            this.$Message.success('更新标记成功');
+          } else {
+            this.$Message.error(res.msg);
+          }
+        })
+      }
     }
   }
   	
@@ -311,13 +440,15 @@ export default {
 }	
 </style>
 <style lang="scss">
+.ivu-table-tip table td {
+  width: 100% !important;
+}
+/*.ivu-input-icon-validate {
+  display: none !important;
+}*/
 .pagination {
   float: right;
   margin: 20px 0;
-
-  .ivu-page-total {
-    color: #fff;
-  }
 }
 
 .demo-drawer-footer{
