@@ -3,6 +3,11 @@ NodeJS全栈开发之前端技术栈基于Vue+iViewUI构建的用户后台管理
 
 [在线DEMO演示](http://106.55.168.13:8082/)
 
+
+# 部分截图
+
+
+
 # 目录结构
 ```
 │  vue.config.js                     // webpack配置
