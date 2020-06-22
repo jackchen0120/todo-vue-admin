@@ -8,19 +8,19 @@ NodeJS全栈开发之前端技术栈基于Vue+iViewUI构建的用户后台管理
 
 ## 登录/注册
 
-<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_1.png" width="375" alt="登录/注册" />
+<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_1.png" width="900" alt="登录/注册" />
 
 ## 首页
 
-<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_2.png" width="375" alt="首页" />
+<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_2.png" width="900" alt="首页" />
 
 ## 新增任务
 
-<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_3.png" width="375" alt="新增任务" />
+<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_3.png" width="900" alt="新增任务" />
 
 ## 修改密码
 
-<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_4.png" width="375" alt="修改密码" />
+<img src="https://raw.githubusercontent.com/jackchen0120/todo-vue-admin/master/public/frontend_4.png" width="900" alt="修改密码" />
 
 
 # 目录结构
