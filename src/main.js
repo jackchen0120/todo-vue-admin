@@ -14,6 +14,7 @@ Vue.prototype.$Valid = Valid;
 
 Vue.config.productionTip = false
 
+// 实现全局路由守卫
 router.beforeEach((to, from, next) => {
 	if (to.meta.title) {
 	  document.title = to.meta.title;
