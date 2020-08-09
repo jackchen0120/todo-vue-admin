@@ -428,6 +428,7 @@ export default {
   flex-direction: column;
   justify-content: space-between;
   .content {
+    height: calc(100% - 60px);
     padding: 30px 40px;
     .list {
       display: flex;
