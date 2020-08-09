@@ -8,7 +8,7 @@
   <div class="header-container">
   	<div class="header">
       <div class="section">
-        <img src="../assets/logo.png" alt="logo">
+        <img src="../assets/logo.png" alt="logo" class="logo">
         <ul>
           <li>
             <router-link to='/home' class="active">首页</router-link>
@@ -187,6 +187,9 @@ export default {
     }
     img {
       outline: none;
+      &.logo {
+        height: 40px;
+      }
       &.avatar {
         border-radius: 50%;
         width: 42px;
